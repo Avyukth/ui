@@ -1,7 +1,7 @@
 use leptos::*;
 use wasm_bindgen::prelude::*;
 
-/// Badge variants matching shadcn/ui design system
+/// Badge variants matching shadcn/ui exactly
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BadgeVariant {
     Default,
@@ -17,18 +17,18 @@ impl Default for BadgeVariant {
 }
 
 impl BadgeVariant {
-    /// Get the Tailwind CSS classes for this variant
+    /// Get the EXACT Tailwind CSS classes from shadcn/ui
     fn classes(&self) -> &'static str {
         match self {
-            Self::Default => "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+            Self::Default => "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
             Self::Secondary => "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-            Self::Destructive => "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+            Self::Destructive => "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
             Self::Outline => "text-foreground",
         }
     }
 }
 
-/// A badge component built with Leptos
+/// A badge component matching shadcn/ui design exactly
 ///
 /// Displays a small count or label, commonly used for tags, categories, or notifications.
 ///
@@ -42,25 +42,21 @@ impl BadgeVariant {
 /// fn App() -> impl IntoView {
 ///     view! {
 ///         // Default badge
-///         <Badge text="New" />
+///         <Badge>"New"</Badge>
 ///
 ///         // Secondary variant
-///         <Badge text="Beta" variant=BadgeVariant::Secondary />
+///         <Badge variant=BadgeVariant::Secondary>"Beta"</Badge>
 ///
 ///         // Destructive variant
-///         <Badge text="Deprecated" variant=BadgeVariant::Destructive />
+///         <Badge variant=BadgeVariant::Destructive>"Deprecated"</Badge>
 ///
 ///         // Outline variant
-///         <Badge text="Draft" variant=BadgeVariant::Outline />
+///         <Badge variant=BadgeVariant::Outline>"Draft"</Badge>
 ///     }
 /// }
 /// ```
 #[component]
 pub fn Badge(
-    /// The text to display in the badge
-    #[prop(into)]
-    text: String,
-
     /// Badge variant (default: Default)
     #[prop(optional)]
     variant: Option<BadgeVariant>,
@@ -68,13 +64,16 @@ pub fn Badge(
     /// Additional CSS classes
     #[prop(optional, into)]
     class: Option<String>,
+
+    /// Badge content
+    children: Children,
 ) -> impl IntoView {
     let variant = variant.unwrap_or_default();
 
-    // Base classes that are always applied
-    let base_classes = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2";
+    // EXACT base classes from shadcn/ui
+    let base_classes = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2";
 
-    // Combine all classes
+    // Combine all classes exactly as shadcn/ui does
     let badge_class = format!(
         "{} {}{}",
         base_classes,
@@ -84,7 +83,7 @@ pub fn Badge(
 
     view! {
         <div class=badge_class>
-            {text}
+            {children()}
         </div>
     }
 }
@@ -105,7 +104,7 @@ pub fn mount_badge(text: &str) -> Result<(), JsValue> {
 
     mount_to_body(move || {
         view! {
-            <Badge text=text.clone() />
+            <Badge>{text.clone()}</Badge>
         }
     });
 
@@ -129,7 +128,7 @@ pub fn mount_badge_variant(text: &str, variant: &str) -> Result<(), JsValue> {
 
     mount_to_body(move || {
         view! {
-            <Badge text=text.clone() variant=variant />
+            <Badge variant=variant>{text.clone()}</Badge>
         }
     });
 
@@ -149,8 +148,10 @@ mod tests {
     #[test]
     fn test_badge_variant_classes() {
         assert!(BadgeVariant::Default.classes().contains("bg-primary"));
+        assert!(BadgeVariant::Default.classes().contains("shadow"));
         assert!(BadgeVariant::Secondary.classes().contains("bg-secondary"));
         assert!(BadgeVariant::Destructive.classes().contains("bg-destructive"));
+        assert!(BadgeVariant::Destructive.classes().contains("shadow"));
         assert!(BadgeVariant::Outline.classes().contains("text-foreground"));
     }
 
