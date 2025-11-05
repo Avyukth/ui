@@ -1,16 +1,20 @@
 [workspace]
 resolver = "2"
 members = [
-    "components/button",
-    "components/badge",
-    "components/avatar",
-    "components/separator",
-    "components/label",
-    "components/skeleton",
-    "components/progress",
-    "components/card",
     "components/alert",
+    "components/avatar",
+    "components/badge",
     "components/breadcrumb",
+    "components/button",
+    "components/card",
+    "components/checkbox",
+    "components/input",
+    "components/label",
+    "components/progress",
+    "components/separator",
+    "components/skeleton",
+    "components/switch",
+    "components/textarea",
 ]
 
 [workspace.package]

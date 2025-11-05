@@ -1,112 +1,40 @@
-use leptos::*;
-use wasm_bindgen::prelude::*;
+use leptos::prelude::*;
+use leptos_node_ref::AnyNodeRef;
+use leptos_style::Style;
+use tailwind_fuse::*;
 
-/// Skeleton variant shapes
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum SkeletonVariant {
-    Default,
-    Circle,
-    Text,
-}
-
-impl Default for SkeletonVariant {
-    fn default() -> Self {
-        Self::Default
-    }
-}
-
-impl SkeletonVariant {
-    fn classes(&self) -> &'static str {
-        match self {
-            Self::Default => "rounded-md",
-            Self::Circle => "rounded-full",
-            Self::Text => "rounded-md h-4",
-        }
-    }
-}
-
-/// A skeleton loading placeholder
-///
-/// # Examples
-///
-/// ```rust
-/// use skeleton::{Skeleton, SkeletonVariant};
-/// use leptos::*;
-///
-/// #[component]
-/// fn App() -> impl IntoView {
-///     view! {
-///         <Skeleton class="w-full h-12" />
-///         <Skeleton variant=SkeletonVariant::Circle class="w-12 h-12" />
-///         <Skeleton variant=SkeletonVariant::Text class="w-3/4" />
-///     }
-/// }
-/// ```
 #[component]
 pub fn Skeleton(
-    /// Skeleton variant
-    #[prop(optional)]
-    variant: Option<SkeletonVariant>,
+    // Global attributes
+    #[prop(into, optional)] class: MaybeProp<String>,
+    #[prop(into, optional)] id: MaybeProp<String>,
+    #[prop(into, optional)] style: Signal<Style>,
 
-    /// Additional CSS classes (use for width/height)
-    #[prop(optional, into)]
-    class: Option<String>,
+    #[prop(into, optional)] node_ref: AnyNodeRef,
 ) -> impl IntoView {
-    let variant = variant.unwrap_or_default();
-
-    let base_classes = "animate-pulse bg-muted";
-    let skeleton_class = format!(
-        "{} {}{}",
-        base_classes,
-        variant.classes(),
-        class.map(|c| format!(" {}", c)).unwrap_or_default()
-    );
-
     view! {
-        <div class=skeleton_class />
+        <div
+            node_ref=node_ref
+            class=move || tw_merge!(
+                "animate-pulse rounded-md bg-muted",
+                class.get()
+            )
+            id=move || id.get()
+            style=style
+        />
     }
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
-    console_error_panic_hook::set_once();
-}
-
-#[wasm_bindgen]
-pub fn mount_skeleton(width: &str, height: &str) -> Result<(), JsValue> {
-    let class = Some(format!("{} {}", width, height));
-
-    mount_to_body(move || {
-        view! { <Skeleton class=class.clone() /> }
-    });
-
-    Ok(())
-}
-
-#[wasm_bindgen]
-pub fn mount_skeleton_circle(size: &str) -> Result<(), JsValue> {
-    let class = Some(format!("{} {}", size, size));
-
-    mount_to_body(move || {
-        view! { <Skeleton variant=SkeletonVariant::Circle class=class.clone() /> }
-    });
-
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_variant_default() {
-        assert_eq!(SkeletonVariant::default(), SkeletonVariant::Default);
-    }
-
-    #[test]
-    fn test_variant_classes() {
-        assert!(SkeletonVariant::Default.classes().contains("rounded-md"));
-        assert!(SkeletonVariant::Circle.classes().contains("rounded-full"));
-        assert!(SkeletonVariant::Text.classes().contains("h-4"));
+// Usage Example
+#[component]
+pub fn SkeletonDemo() -> impl IntoView {
+    view! {
+        <div class="flex items-center space-x-4">
+            <Skeleton class="h-12 w-12 rounded-full" />
+            <div class="space-y-2">
+                <Skeleton class="h-4 w-[250px]" />
+                <Skeleton class="h-4 w-[200px]" />
+            </div>
+        </div>
     }
 }

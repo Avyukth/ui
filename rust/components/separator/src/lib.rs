@@ -1,8 +1,9 @@
-use leptos::*;
-use wasm_bindgen::prelude::*;
+use leptos::prelude::*;
+use leptos_node_ref::AnyNodeRef;
+use leptos_style::Style;
+use tailwind_fuse::*;
 
-/// Separator orientation
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum SeparatorOrientation {
     Horizontal,
     Vertical,
@@ -14,110 +15,77 @@ impl Default for SeparatorOrientation {
     }
 }
 
-impl SeparatorOrientation {
-    fn classes(&self) -> &'static str {
-        match self {
-            Self::Horizontal => "h-[1px] w-full",
-            Self::Vertical => "h-full w-[1px]",
-        }
-    }
-}
-
-/// A separator/divider component
-///
-/// # Examples
-///
-/// ```rust
-/// use separator::{Separator, SeparatorOrientation};
-/// use leptos::*;
-///
-/// #[component]
-/// fn App() -> impl IntoView {
-///     view! {
-///         <div>
-///             <p>"Content above"</p>
-///             <Separator />
-///             <p>"Content below"</p>
-///
-///             <div class="flex">
-///                 <div>"Left"</div>
-///                 <Separator orientation=SeparatorOrientation::Vertical />
-///                 <div>"Right"</div>
-///             </div>
-///         </div>
-///     }
-/// }
-/// ```
 #[component]
 pub fn Separator(
-    /// Orientation (default: Horizontal)
-    #[prop(optional)]
-    orientation: Option<SeparatorOrientation>,
+    #[prop(into, optional)] orientation: Signal<SeparatorOrientation>,
+    #[prop(into, optional)] decorative: Signal<bool>,
 
-    /// Decorative only (no semantic meaning)
-    #[prop(optional)]
-    decorative: Option<bool>,
+    // Global attributes
+    #[prop(into, optional)] class: MaybeProp<String>,
+    #[prop(into, optional)] id: MaybeProp<String>,
+    #[prop(into, optional)] style: Signal<Style>,
 
-    /// Additional CSS classes
-    #[prop(optional, into)]
-    class: Option<String>,
+    #[prop(into, optional)] node_ref: AnyNodeRef,
 ) -> impl IntoView {
-    let orientation = orientation.unwrap_or_default();
-    let decorative = decorative.unwrap_or(false);
+    let base_class = move || match orientation.get() {
+        SeparatorOrientation::Horizontal => "h-[1px] w-full",
+        SeparatorOrientation::Vertical => "h-full w-[1px]",
+    };
 
-    let base_classes = "shrink-0 bg-border";
-    let separator_class = format!(
-        "{} {}{}",
-        base_classes,
-        orientation.classes(),
-        class.map(|c| format!(" {}", c)).unwrap_or_default()
-    );
+    let role = move || {
+        if decorative.get() {
+            Some("none")
+        } else {
+            Some("separator")
+        }
+    };
 
-    if decorative {
-        view! { <div class=separator_class /> }.into_view()
-    } else {
-        view! {
-            <div
-                role="separator"
-                aria-orientation=move || match orientation {
-                    SeparatorOrientation::Horizontal => "horizontal",
-                    SeparatorOrientation::Vertical => "vertical",
-                }
-                class=separator_class
-            />
-        }.into_view()
+    let aria_orientation = move || {
+        if !decorative.get() {
+            match orientation.get() {
+                SeparatorOrientation::Horizontal => Some("horizontal"),
+                SeparatorOrientation::Vertical => Some("vertical"),
+            }
+        } else {
+            None
+        }
+    };
+
+    view! {
+        <div
+            node_ref=node_ref
+            role=role
+            aria-orientation=aria_orientation
+            class=move || tw_merge!(
+                "shrink-0 bg-border",
+                base_class(),
+                class.get()
+            )
+            id=move || id.get()
+            style=style
+        />
     }
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
-    console_error_panic_hook::set_once();
-}
-
-#[wasm_bindgen]
-pub fn mount_separator() -> Result<(), JsValue> {
-    mount_to_body(|| view! { <Separator /> });
-    Ok(())
-}
-
-#[wasm_bindgen]
-pub fn mount_separator_vertical() -> Result<(), JsValue> {
-    mount_to_body(|| view! { <Separator orientation=SeparatorOrientation::Vertical /> });
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_orientation_default() {
-        assert_eq!(SeparatorOrientation::default(), SeparatorOrientation::Horizontal);
-    }
-
-    #[test]
-    fn test_orientation_classes() {
-        assert!(SeparatorOrientation::Horizontal.classes().contains("w-full"));
-        assert!(SeparatorOrientation::Vertical.classes().contains("h-full"));
+// Usage Example
+#[component]
+pub fn SeparatorDemo() -> impl IntoView {
+    view! {
+        <div>
+            <div class="space-y-1">
+                <h4 class="text-sm font-medium leading-none">"Radix Primitives"</h4>
+                <p class="text-sm text-muted-foreground">
+                    "An open-source UI component library."
+                </p>
+            </div>
+            <Separator class="my-4" />
+            <div class="flex h-5 items-center space-x-4 text-sm">
+                <div>"Blog"</div>
+                <Separator orientation=Signal::derive(|| SeparatorOrientation::Vertical) />
+                <div>"Docs"</div>
+                <Separator orientation=Signal::derive(|| SeparatorOrientation::Vertical) />
+                <div>"Source"</div>
+            </div>
+        </div>
     }
 }

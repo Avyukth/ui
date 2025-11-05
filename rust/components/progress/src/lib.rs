@@ -1,94 +1,68 @@
-use leptos::*;
-use wasm_bindgen::prelude::*;
+use leptos::prelude::*;
+use leptos_node_ref::AnyNodeRef;
+use leptos_style::Style;
+use tailwind_fuse::*;
 
-/// A progress bar component
-///
-/// # Examples
-///
-/// ```rust
-/// use progress::Progress;
-/// use leptos::*;
-///
-/// #[component]
-/// fn App() -> impl IntoView {
-///     view! {
-///         <Progress value=60.0 />
-///         <Progress value=30.0 max=100.0 />
-///     }
-/// }
-/// ```
 #[component]
 pub fn Progress(
-    /// Current progress value
-    #[prop(optional)]
-    value: Option<f64>,
+    #[prop(into, optional)] value: Signal<f64>,
+    #[prop(into, optional)] max: Signal<f64>,
 
-    /// Maximum value (default: 100)
-    #[prop(optional)]
-    max: Option<f64>,
+    // Global attributes
+    #[prop(into, optional)] class: MaybeProp<String>,
+    #[prop(into, optional)] id: MaybeProp<String>,
+    #[prop(into, optional)] style: Signal<Style>,
 
-    /// Additional CSS classes
-    #[prop(optional, into)]
-    class: Option<String>,
+    #[prop(into, optional)] node_ref: AnyNodeRef,
 ) -> impl IntoView {
-    let value = value.unwrap_or(0.0);
-    let max = max.unwrap_or(100.0);
-
-    let percentage = if max > 0.0 {
-        ((value / max) * 100.0).min(100.0).max(0.0)
-    } else {
-        0.0
+    let percentage = move || {
+        let val = value.get();
+        let max_val = max.get();
+        if max_val > 0.0 {
+            (val / max_val * 100.0).min(100.0).max(0.0)
+        } else {
+            0.0
+        }
     };
 
-    let base_classes = "relative h-4 w-full overflow-hidden rounded-full bg-secondary";
-    let progress_class = format!(
-        "{}{}",
-        base_classes,
-        class.map(|c| format!(" {}", c)).unwrap_or_default()
-    );
-
     view! {
-        <div class=progress_class>
+        <div
+            node_ref=node_ref
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax=move || max.get().to_string()
+            aria-valuenow=move || value.get().to_string()
+            class=move || tw_merge!(
+                "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+                class.get()
+            )
+            id=move || id.get()
+            style=style
+        >
             <div
                 class="h-full w-full flex-1 bg-primary transition-all"
-                style:transform=format!("translateX(-{}%)", 100.0 - percentage)
+                style:transform=move || format!("translateX(-{}%)", 100.0 - percentage())
             />
         </div>
     }
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
-    console_error_panic_hook::set_once();
-}
+// Usage Example
+#[component]
+pub fn ProgressDemo() -> impl IntoView {
+    let (progress, set_progress) = signal(13.0);
 
-#[wasm_bindgen]
-pub fn mount_progress(value: f64) -> Result<(), JsValue> {
-    mount_to_body(move || {
-        view! { <Progress value=Some(value) /> }
-    });
+    // Simulate progress
+    set_interval(
+        move || {
+            set_progress.update(|p| {
+                *p = (*p + 10.0).min(100.0);
+            });
+        },
+        std::time::Duration::from_millis(500),
+    );
 
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_percentage_calculation() {
-        // Test will validate percentage calculation logic
-        let value = 50.0;
-        let max = 100.0;
-        let percentage = ((value / max) * 100.0).min(100.0).max(0.0);
-        assert_eq!(percentage, 50.0);
-    }
-
-    #[test]
-    fn test_percentage_max_clamp() {
-        let value = 150.0;
-        let max = 100.0;
-        let percentage = ((value / max) * 100.0).min(100.0).max(0.0);
-        assert_eq!(percentage, 100.0);
+    view! {
+        <Progress value=progress max=Signal::derive(|| 100.0) />
     }
 }

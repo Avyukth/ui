@@ -1,78 +1,48 @@
-use leptos::*;
-use wasm_bindgen::prelude::*;
+use leptos::prelude::*;
+use leptos_node_ref::AnyNodeRef;
+use leptos_style::Style;
+use tailwind_fuse::*;
 
-/// A form label component
-///
-/// # Examples
-///
-/// ```rust
-/// use label::Label;
-/// use leptos::*;
-///
-/// #[component]
-/// fn App() -> impl IntoView {
-///     view! {
-///         <Label for_id="email" text="Email Address" />
-///         <input id="email" type="email" />
-///     }
-/// }
-/// ```
 #[component]
 pub fn Label(
-    /// The text to display in the label
-    #[prop(into)]
-    text: String,
+    // Label-specific attributes
+    #[prop(into, optional)] r#for: MaybeProp<String>,
 
-    /// The ID of the form element this label is for
-    #[prop(optional, into)]
-    for_id: Option<String>,
+    // Global attributes
+    #[prop(into, optional)] class: MaybeProp<String>,
+    #[prop(into, optional)] id: MaybeProp<String>,
+    #[prop(into, optional)] style: Signal<Style>,
 
-    /// Additional CSS classes
-    #[prop(optional, into)]
-    class: Option<String>,
+    #[prop(into, optional)] node_ref: AnyNodeRef,
+    children: Children,
 ) -> impl IntoView {
-    let base_classes = "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70";
-
-    let label_class = format!(
-        "{}{}",
-        base_classes,
-        class.map(|c| format!(" {}", c)).unwrap_or_default()
-    );
-
     view! {
         <label
-            for=for_id
-            class=label_class
+            node_ref=node_ref
+            r#for=move || r#for.get()
+            class=move || tw_merge!(
+                "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+                class.get()
+            )
+            id=move || id.get()
+            style=style
         >
-            {text}
+            {children()}
         </label>
     }
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
-    console_error_panic_hook::set_once();
-}
-
-#[wasm_bindgen]
-pub fn mount_label(text: &str, for_id: &str) -> Result<(), JsValue> {
-    let text = text.to_string();
-    let for_id = if for_id.is_empty() { None } else { Some(for_id.to_string()) };
-
-    mount_to_body(move || {
-        view! { <Label text=text.clone() for_id=for_id.clone() /> }
-    });
-
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_label_compiles() {
-        // Basic compilation test
-        assert!(true);
+// Usage Example
+#[component]
+pub fn LabelDemo() -> impl IntoView {
+    view! {
+        <div class="flex flex-col space-y-2">
+            <Label r#for="email">"Your email"</Label>
+            <input
+                id="email"
+                type="email"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+            />
+        </div>
     }
 }
