@@ -10,6 +10,7 @@ members = [
     "components/progress",
     "components/card",
     "components/alert",
+    "components/breadcrumb",
 ]
 
 [workspace.package]
