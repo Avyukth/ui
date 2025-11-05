@@ -24,3 +24,7 @@ repository = "https://github.com/shadcn-ui/ui"
 leptos = { version = "0.7", features = ["csr"] }
 wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
+tailwind_fuse = "0.3"
+leptos-node-ref = "0.1"
+leptos-struct-component = "0.1"
+leptos-style = "0.1"

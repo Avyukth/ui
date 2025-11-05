@@ -1,14 +1,35 @@
-use leptos::*;
+use leptos::{ev::MouseEvent, prelude::*};
+use leptos_node_ref::AnyNodeRef;
+use leptos_struct_component::{StructComponent, struct_component};
+use leptos_style::Style;
+use tailwind_fuse::*;
 use wasm_bindgen::prelude::*;
 
-/// Button variants matching shadcn/ui exactly
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(TwClass)]
+#[tw(
+    class = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+)]
+pub struct ButtonClass {
+    pub variant: ButtonVariant,
+    pub size: ButtonSize,
+}
+
+#[derive(PartialEq, TwVariant, Clone, Copy)]
 pub enum ButtonVariant {
+    #[tw(
+        default,
+        class = "bg-primary text-primary-foreground hover:bg-primary/90"
+    )]
     Default,
+    #[tw(class = "bg-destructive text-destructive-foreground hover:bg-destructive/90")]
     Destructive,
+    #[tw(class = "border border-input bg-background hover:bg-accent hover:text-accent-foreground")]
     Outline,
+    #[tw(class = "bg-secondary text-secondary-foreground hover:bg-secondary/80")]
     Secondary,
+    #[tw(class = "hover:bg-accent hover:text-accent-foreground")]
     Ghost,
+    #[tw(class = "text-primary underline-offset-4 hover:underline")]
     Link,
 }
 
@@ -18,26 +39,15 @@ impl Default for ButtonVariant {
     }
 }
 
-impl ButtonVariant {
-    /// Get the EXACT Tailwind CSS classes from shadcn/ui
-    fn classes(&self) -> &'static str {
-        match self {
-            Self::Default => "bg-primary text-primary-foreground hover:bg-primary/90",
-            Self::Destructive => "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-            Self::Outline => "border border-input hover:bg-accent hover:text-accent-foreground",
-            Self::Secondary => "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-            Self::Ghost => "hover:bg-accent hover:text-accent-foreground",
-            Self::Link => "underline-offset-4 hover:underline text-primary",
-        }
-    }
-}
-
-/// Button sizes matching shadcn/ui exactly
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(PartialEq, TwVariant, Clone, Copy)]
 pub enum ButtonSize {
+    #[tw(default, class = "h-10 px-4 py-2")]
     Default,
+    #[tw(class = "h-9 rounded-md px-3")]
     Sm,
+    #[tw(class = "h-11 rounded-md px-8")]
     Lg,
+    #[tw(class = "h-10 w-10")]
     Icon,
 }
 
@@ -47,25 +57,40 @@ impl Default for ButtonSize {
     }
 }
 
-impl ButtonSize {
-    /// Get the EXACT size classes from shadcn/ui
-    fn classes(&self) -> &'static str {
-        match self {
-            Self::Default => "h-10 px-4 py-2",
-            Self::Sm => "h-9 rounded-md px-3",
-            Self::Lg => "h-11 rounded-md px-8",
-            Self::Icon => "h-10 w-10",
-        }
-    }
+#[derive(Clone, StructComponent)]
+#[struct_component(tag = "button")]
+pub struct ButtonChildProps {
+    pub node_ref: AnyNodeRef,
+
+    // Global attributes
+    pub autofocus: Signal<bool>,
+    pub class: Signal<String>,
+    pub id: MaybeProp<String>,
+    pub style: Signal<Style>,
+
+    // Attributes from `button`
+    pub disabled: Signal<bool>,
+    pub form: MaybeProp<String>,
+    pub formaction: MaybeProp<String>,
+    pub formenctype: MaybeProp<String>,
+    pub formmethod: MaybeProp<String>,
+    pub formnovalidate: Signal<bool>,
+    pub formtarget: MaybeProp<String>,
+    pub name: MaybeProp<String>,
+    pub r#type: MaybeProp<String>,
+    pub value: MaybeProp<String>,
+
+    // Event handler attributes
+    pub onclick: Option<Callback<MouseEvent>>,
 }
 
-/// A button component matching shadcn/ui design exactly
+/// Button component matching shadcn/ui design exactly
 ///
 /// # Examples
 ///
 /// ```rust
 /// use button::{Button, ButtonVariant, ButtonSize};
-/// use leptos::*;
+/// use leptos::prelude::*;
 ///
 /// #[component]
 /// fn App() -> impl IntoView {
@@ -74,84 +99,92 @@ impl ButtonSize {
 ///         <Button>"Click me"</Button>
 ///
 ///         // With variant and size
-///         <Button variant=ButtonVariant::Outline size=ButtonSize::Lg>
+///         <Button
+///             variant=Signal::derive(move || ButtonVariant::Outline)
+///             size=Signal::derive(move || ButtonSize::Lg)
+///         >
 ///             "Large Outline"
 ///         </Button>
 ///
 ///         // Icon button
-///         <Button variant=ButtonVariant::Outline size=ButtonSize::Icon>
-///             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+///         <Button
+///             variant=Signal::derive(move || ButtonVariant::Outline)
+///             size=Signal::derive(move || ButtonSize::Icon)
+///         >
+///             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
 ///                 <path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>
 ///             </svg>
-///         </Button>
-///
-///         // With icon and text
-///         <Button>
-///             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-///                 <path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>
-///             </svg>
-///             "Upload"
 ///         </Button>
 ///     }
 /// }
 /// ```
 #[component]
 pub fn Button(
-    /// Button variant (default: Default)
-    #[prop(optional)]
-    variant: Option<ButtonVariant>,
+    #[prop(into, optional)] variant: Signal<ButtonVariant>,
+    #[prop(into, optional)] size: Signal<ButtonSize>,
 
-    /// Button size (default: Default)
-    #[prop(optional)]
-    size: Option<ButtonSize>,
+    // Global attributes
+    #[prop(into, optional)] autofocus: Signal<bool>,
+    #[prop(into, optional)] class: MaybeProp<String>,
+    #[prop(into, optional)] id: MaybeProp<String>,
+    #[prop(into, optional)] style: Signal<Style>,
 
-    /// Whether the button is disabled
-    #[prop(optional)]
-    disabled: Option<bool>,
+    // Attributes from `button`
+    #[prop(into, optional)] disabled: Signal<bool>,
+    #[prop(into, optional)] form: MaybeProp<String>,
+    #[prop(into, optional)] formaction: MaybeProp<String>,
+    #[prop(into, optional)] formenctype: MaybeProp<String>,
+    #[prop(into, optional)] formmethod: MaybeProp<String>,
+    #[prop(into, optional)] formnovalidate: Signal<bool>,
+    #[prop(into, optional)] formtarget: MaybeProp<String>,
+    #[prop(into, optional)] name: MaybeProp<String>,
+    #[prop(into, optional)] r#type: MaybeProp<String>,
+    #[prop(into, optional)] value: MaybeProp<String>,
 
-    /// Additional CSS classes
-    #[prop(optional, into)]
-    class: Option<String>,
+    // Event handler attributes
+    #[prop(into, optional)] onclick: Option<Callback<MouseEvent>>,
 
-    /// Optional click handler
-    #[prop(optional)]
-    on_click: Option<Box<dyn Fn()>>,
-
-    /// Button content (text, icons, or both)
-    children: Children,
+    #[prop(into, optional)] node_ref: AnyNodeRef,
+    #[prop(into, optional)] as_child: Option<Callback<ButtonChildProps, AnyView>>,
+    #[prop(optional)] children: Option<Children>,
 ) -> impl IntoView {
-    let variant = variant.unwrap_or_default();
-    let size = size.unwrap_or_default();
-    let disabled = disabled.unwrap_or(false);
-
-    // EXACT base classes from shadcn/ui
-    let base_classes = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0";
-
-    // Combine all classes exactly as shadcn/ui does
-    let button_class = format!(
-        "{} {} {}{}",
-        base_classes,
-        variant.classes(),
-        size.classes(),
-        class.map(|c| format!(" {}", c)).unwrap_or_default()
-    );
-
-    let handle_click = move |_| {
-        if !disabled {
-            if let Some(ref callback) = on_click {
-                callback();
-            }
+    let class = Memo::new(move |_| {
+        ButtonClass {
+            variant: variant.get(),
+            size: size.get(),
         }
+        .with_class(class.get().unwrap_or_default())
+    });
+
+    let child_props = ButtonChildProps {
+        node_ref,
+
+        // Global attributes
+        autofocus,
+        class: class.into(),
+        id,
+        style,
+
+        // Attributes from `button`
+        disabled,
+        form,
+        formaction,
+        formenctype,
+        formmethod,
+        formnovalidate,
+        formtarget,
+        name,
+        r#type,
+        value,
+
+        // Event handler attributes
+        onclick,
     };
 
-    view! {
-        <button
-            class=button_class
-            disabled=disabled
-            on:click=handle_click
-        >
-            {children()}
-        </button>
+    if let Some(as_child) = as_child.as_ref() {
+        as_child.run(child_props)
+    } else {
+        child_props.render(children)
     }
 }
 
@@ -161,7 +194,7 @@ pub fn start() {
     console_error_panic_hook::set_once();
 }
 
-/// Mount a simple button (for JavaScript usage)
+/// Mount a simple button for JavaScript usage
 #[wasm_bindgen]
 pub fn mount_button(text: &str) -> Result<(), JsValue> {
     let text = text.to_string();
@@ -175,7 +208,7 @@ pub fn mount_button(text: &str) -> Result<(), JsValue> {
     Ok(())
 }
 
-/// Mount a button with variant and size
+/// Mount a button with variant and size for JavaScript usage
 #[wasm_bindgen]
 pub fn mount_button_full(text: &str, variant: &str, size: &str) -> Result<(), JsValue> {
     let text = text.to_string();
@@ -198,7 +231,12 @@ pub fn mount_button_full(text: &str, variant: &str, size: &str) -> Result<(), Js
 
     mount_to_body(move || {
         view! {
-            <Button variant=variant size=size>{text.clone()}</Button>
+            <Button
+                variant=Signal::derive(move || variant)
+                size=Signal::derive(move || size)
+            >
+                {text.clone()}
+            </Button>
         }
     });
 
@@ -222,14 +260,54 @@ mod tests {
     }
 
     #[test]
-    fn test_variant_classes() {
-        assert_eq!(ButtonVariant::Default.classes(), "bg-primary text-primary-foreground hover:bg-primary/90");
-        assert_eq!(ButtonVariant::Outline.classes(), "border border-input hover:bg-accent hover:text-accent-foreground");
+    fn test_button_variant_equality() {
+        assert_eq!(ButtonVariant::Default, ButtonVariant::Default);
+        assert_ne!(ButtonVariant::Default, ButtonVariant::Destructive);
+        assert_ne!(ButtonVariant::Outline, ButtonVariant::Secondary);
     }
 
     #[test]
-    fn test_size_classes() {
-        assert_eq!(ButtonSize::Default.classes(), "h-10 px-4 py-2");
-        assert_eq!(ButtonSize::Icon.classes(), "h-10 w-10");
+    fn test_button_size_equality() {
+        assert_eq!(ButtonSize::Default, ButtonSize::Default);
+        assert_ne!(ButtonSize::Sm, ButtonSize::Lg);
+        assert_ne!(ButtonSize::Icon, ButtonSize::Default);
+    }
+
+    #[test]
+    fn test_all_variants_exist() {
+        let variants = vec![
+            ButtonVariant::Default,
+            ButtonVariant::Destructive,
+            ButtonVariant::Outline,
+            ButtonVariant::Secondary,
+            ButtonVariant::Ghost,
+            ButtonVariant::Link,
+        ];
+        assert_eq!(variants.len(), 6);
+    }
+
+    #[test]
+    fn test_all_sizes_exist() {
+        let sizes = vec![
+            ButtonSize::Default,
+            ButtonSize::Sm,
+            ButtonSize::Lg,
+            ButtonSize::Icon,
+        ];
+        assert_eq!(sizes.len(), 4);
+    }
+
+    #[test]
+    fn test_variant_clone() {
+        let variant = ButtonVariant::Outline;
+        let cloned = variant;
+        assert_eq!(variant, cloned);
+    }
+
+    #[test]
+    fn test_size_clone() {
+        let size = ButtonSize::Lg;
+        let cloned = size;
+        assert_eq!(size, cloned);
     }
 }

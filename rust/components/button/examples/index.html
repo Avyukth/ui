@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>shadcn/ui Button - Leptos WASM Example</title>
+    <title>Button Component Examples</title>
 
-    <!-- Tailwind CSS CDN for styling -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Tailwind CSS Config for shadcn/ui colors -->
+    <!-- Tailwind Config for shadcn/ui colors -->
     <script>
         tailwind.config = {
             theme: {
@@ -16,11 +16,11 @@
                     colors: {
                         border: "hsl(214.3 31.8% 91.4%)",
                         input: "hsl(214.3 31.8% 91.4%)",
-                        ring: "hsl(222.2 84% 4.9%)",
+                        ring: "hsl(221.2 83.2% 53.3%)",
                         background: "hsl(0 0% 100%)",
                         foreground: "hsl(222.2 84% 4.9%)",
                         primary: {
-                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            DEFAULT: "hsl(221.2 83.2% 53.3%)",
                             foreground: "hsl(210 40% 98%)",
                         },
                         secondary: {
@@ -39,19 +39,6 @@
                             DEFAULT: "hsl(210 40% 96.1%)",
                             foreground: "hsl(222.2 47.4% 11.2%)",
                         },
-                        popover: {
-                            DEFAULT: "hsl(0 0% 100%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
-                        },
-                        card: {
-                            DEFAULT: "hsl(0 0% 100%)",
-                            foreground: "hsl(222.2 84% 4.9%)",
-                        },
-                    },
-                    borderRadius: {
-                        lg: "0.5rem",
-                        md: "calc(0.5rem - 2px)",
-                        sm: "calc(0.5rem - 4px)",
                     },
                 }
             }
@@ -60,216 +47,57 @@
 
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
         }
     </style>
 </head>
-<body class="bg-background text-foreground p-8">
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-8">
-            <h1 class="text-4xl font-bold mb-2">shadcn/ui Button Component</h1>
-            <p class="text-muted-foreground text-lg">Built with Leptos and Rust WASM</p>
-        </header>
+<body>
+    <div id="app"></div>
 
-        <div class="space-y-8">
-            <!-- Variants Section -->
-            <section class="border border-border rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Button Variants</h2>
-                <p class="text-muted-foreground mb-4">
-                    Multiple button variants matching the shadcn/ui design system.
-                </p>
-
-                <div class="flex flex-wrap gap-4" id="variants-demo"></div>
-            </section>
-
-            <!-- Sizes Section -->
-            <section class="border border-border rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Button Sizes</h2>
-                <p class="text-muted-foreground mb-4">
-                    Different sizes for various use cases.
-                </p>
-
-                <div class="flex flex-wrap items-center gap-4" id="sizes-demo"></div>
-            </section>
-
-            <!-- Combined Examples -->
-            <section class="border border-border rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Combined Examples</h2>
-                <p class="text-muted-foreground mb-4">
-                    Mix variants and sizes for different contexts.
-                </p>
-
-                <div class="flex flex-wrap gap-4" id="combined-demo"></div>
-            </section>
-
-            <!-- Instructions Section -->
-            <section class="border border-border rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Getting Started</h2>
-
-                <div class="space-y-4">
-                    <div>
-                        <h3 class="text-lg font-medium mb-2">1. Build the component</h3>
-                        <pre class="bg-muted p-4 rounded-md overflow-x-auto"><code>cd rust/components/button
-wasm-pack build --target web --out-dir pkg</code></pre>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-medium mb-2">2. Serve this file</h3>
-                        <pre class="bg-muted p-4 rounded-md overflow-x-auto"><code>python3 -m http.server 8080
-# Visit http://localhost:8080</code></pre>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-medium mb-2">3. Use in your HTML</h3>
-                        <pre class="bg-muted p-4 rounded-md overflow-x-auto"><code>&lt;script type="module"&gt;
-    import init, { mount_button, mount_button_variant, mount_button_full } from './pkg/button.js';
-
-    async function run() {
-        await init();
-
-        // Simple button
-        mount_button('Click Me');
-
-        // Button with variant
-        mount_button_variant('Delete', 'destructive');
-
-        // Button with variant and size
-        mount_button_full('Submit', 'outline', 'sm');
-    }
-
-    run();
-&lt;/script&gt;</code></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Features Section -->
-            <section class="border border-border rounded-lg p-6">
-                <h2 class="text-2xl font-semibold mb-4">Features</h2>
-                <ul class="list-disc list-inside space-y-2 text-muted-foreground">
-                    <li>Built with Leptos reactive framework</li>
-                    <li>Compiled to WebAssembly for performance</li>
-                    <li>Styled with Tailwind CSS (matching shadcn/ui design)</li>
-                    <li>Type-safe with Rust's type system</li>
-                    <li>6 variants: Default, Destructive, Outline, Secondary, Ghost, Link</li>
-                    <li>4 sizes: Small, Default, Large, Icon</li>
-                    <li>Disabled state support</li>
-                    <li>Custom class names</li>
-                    <li>Event handling support</li>
-                </ul>
-            </section>
-        </div>
-
-        <footer class="mt-8 pt-8 border-t border-border text-center text-muted-foreground">
-            <p>
-                Part of
-                <a href="https://ui.shadcn.com" class="underline hover:text-foreground transition-colors">
-                    shadcn/ui
-                </a>
-            </p>
-        </footer>
-    </div>
-
-    <!-- Load the Leptos Button WASM Module -->
     <script type="module">
-        // Check if WASM module is available
-        const wasmAvailable = await fetch('../pkg/button.js')
+        // Check which example to load from URL param
+        const urlParams = new URLSearchParams(window.location.search);
+        const example = urlParams.get('example') || 'comprehensive';
+
+        const wasmAvailable = await fetch(`../pkg/${example}.js`)
             .then(res => res.ok)
             .catch(() => false);
 
         if (!wasmAvailable) {
-            console.log('📦 To see the buttons in action:');
-            console.log('1. Run: cd rust/components/button');
-            console.log('2. Run: wasm-pack build --target web --out-dir pkg');
-            console.log('3. Refresh this page');
-
-            // Show instructions in the demo areas
-            const message = `
-                <div class="bg-muted p-6 rounded-md text-center">
-                    <p class="text-sm text-muted-foreground mb-2">⚙️ WASM module not built yet</p>
-                    <p class="text-xs text-muted-foreground">Run: <code class="bg-background px-2 py-1 rounded">wasm-pack build --target web --out-dir pkg</code></p>
+            document.getElementById('app').innerHTML = `
+                <div class="min-h-screen bg-background p-8 flex items-center justify-center">
+                    <div class="max-w-2xl text-center space-y-4">
+                        <h1 class="text-3xl font-bold">Build Required</h1>
+                        <p class="text-muted-foreground">
+                            Build the WASM example first:
+                        </p>
+                        <pre class="bg-muted p-4 rounded text-sm text-left overflow-x-auto">
+cd rust/components/button
+wasm-pack build --target web --out-dir pkg --example ${example}</pre>
+                        <div class="flex gap-2 justify-center mt-4">
+                            <a href="?example=basic" class="text-primary hover:underline">Basic Example</a>
+                            <span class="text-muted-foreground">|</span>
+                            <a href="?example=comprehensive" class="text-primary hover:underline">Comprehensive Example</a>
+                        </div>
+                    </div>
                 </div>
             `;
-            document.getElementById('variants-demo').innerHTML = message;
-            document.getElementById('sizes-demo').innerHTML = message;
-            document.getElementById('combined-demo').innerHTML = message;
         } else {
-            // Import and use the WASM module
-            const { default: init, mount_button, mount_button_variant, mount_button_full } = await import('../pkg/button.js');
-
-            await init();
-
-            // Create container elements for each button
-            function createButtonContainer(containerId, beforeHTML = '') {
-                const container = document.createElement('div');
-                container.className = 'flex items-center gap-2';
-                if (beforeHTML) {
-                    const label = document.createElement('span');
-                    label.className = 'text-sm text-muted-foreground min-w-[80px]';
-                    label.innerHTML = beforeHTML;
-                    container.appendChild(label);
-                }
-                const buttonWrapper = document.createElement('div');
-                container.appendChild(buttonWrapper);
-                document.getElementById(containerId).appendChild(container);
-                return buttonWrapper;
+            try {
+                const module = await import(`../pkg/${example}.js`);
+                await module.default();
+                console.log(`✅ ${example} example loaded successfully!`);
+            } catch (err) {
+                console.error('Failed to load example:', err);
+                document.getElementById('app').innerHTML = `
+                    <div class="min-h-screen bg-background p-8 flex items-center justify-center">
+                        <div class="max-w-2xl text-center space-y-4">
+                            <h1 class="text-3xl font-bold text-destructive">Error Loading Example</h1>
+                            <p class="text-muted-foreground">${err.message}</p>
+                        </div>
+                    </div>
+                `;
             }
-
-            // Variants Demo
-            const variants = [
-                { name: 'Default', variant: 'default' },
-                { name: 'Destructive', variant: 'destructive' },
-                { name: 'Outline', variant: 'outline' },
-                { name: 'Secondary', variant: 'secondary' },
-                { name: 'Ghost', variant: 'ghost' },
-                { name: 'Link', variant: 'link' }
-            ];
-
-            const variantsContainer = document.getElementById('variants-demo');
-            variantsContainer.innerHTML = '';
-
-            for (const { name, variant } of variants) {
-                const wrapper = createButtonContainer('variants-demo', `${name}:`);
-                // For default variant, use simple mount_button
-                if (variant === 'default') {
-                    mount_button(name);
-                } else {
-                    mount_button_variant(name, variant);
-                }
-            }
-
-            // Sizes Demo
-            const sizes = [
-                { name: 'Small', size: 'sm' },
-                { name: 'Default', size: 'default' },
-                { name: 'Large', size: 'lg' },
-                { name: 'Icon (⚙️)', size: 'icon' }
-            ];
-
-            const sizesContainer = document.getElementById('sizes-demo');
-            sizesContainer.innerHTML = '';
-
-            for (const { name, size } of sizes) {
-                const wrapper = createButtonContainer('sizes-demo', `${name}:`);
-                mount_button_full(size === 'icon' ? '⚙️' : name, 'default', size);
-            }
-
-            // Combined Examples
-            const combined = [
-                { label: 'Small Destructive', variant: 'destructive', size: 'sm' },
-                { label: 'Large Outline', variant: 'outline', size: 'lg' },
-                { label: 'Small Secondary', variant: 'secondary', size: 'sm' },
-                { label: 'Large Ghost', variant: 'ghost', size: 'lg' }
-            ];
-
-            const combinedContainer = document.getElementById('combined-demo');
-            combinedContainer.innerHTML = '';
-
-            for (const { label, variant, size } of combined) {
-                mount_button_full(label, variant, size);
-            }
-
-            console.log('✅ Button components loaded successfully!');
         }
     </script>
 </body>
