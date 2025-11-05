@@ -5,6 +5,7 @@ members = [
     "components/badge",
     "components/avatar",
     "components/separator",
+    "components/label",
 ]
 
 [workspace.package]
