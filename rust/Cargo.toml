@@ -8,6 +8,7 @@ members = [
     "components/label",
     "components/skeleton",
     "components/progress",
+    "components/card",
 ]
 
 [workspace.package]
