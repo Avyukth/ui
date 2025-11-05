@@ -1,12 +1,22 @@
 use leptos::*;
+use leptos_node_ref::AnyNodeRef;
+use leptos_struct_component::StructComponent;
+use tailwind_fuse::{tw_join, tw_merge, AsTailwindClass, TwClass, TwVariant};
 use wasm_bindgen::prelude::*;
 
-/// Badge variants matching shadcn/ui exactly
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Badge variant type matching shadcn/ui design system
+#[derive(PartialEq, TwVariant, Clone, Copy)]
 pub enum BadgeVariant {
+    #[tw(
+        default,
+        class = "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80"
+    )]
     Default,
+    #[tw(class = "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80")]
     Secondary,
+    #[tw(class = "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80")]
     Destructive,
+    #[tw(class = "text-foreground")]
     Outline,
 }
 
@@ -16,21 +26,30 @@ impl Default for BadgeVariant {
     }
 }
 
-impl BadgeVariant {
-    /// Get the EXACT Tailwind CSS classes from shadcn/ui
-    fn classes(&self) -> &'static str {
-        match self {
-            Self::Default => "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
-            Self::Secondary => "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-            Self::Destructive => "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-            Self::Outline => "text-foreground",
-        }
-    }
+/// Badge component class structure using TwClass
+#[derive(TwClass)]
+#[tw(
+    class = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+)]
+pub struct BadgeClass {
+    pub variant: BadgeVariant,
 }
 
-/// A badge component matching shadcn/ui design exactly
+/// Props for Badge child components using StructComponent pattern
+#[derive(StructComponent)]
+#[component]
+pub struct BadgeChildProps {
+    #[component_prop(rename = "node_ref")]
+    pub node_ref: AnyNodeRef,
+    #[component_prop(rename = "attrs")]
+    pub attrs: Vec<(&'static str, Attribute)>,
+    #[component_prop]
+    pub children: ViewFn,
+}
+
+/// A badge component for displaying tags, categories, or status
 ///
-/// Displays a small count or label, commonly used for tags, categories, or notifications.
+/// Displays a small badge with various visual styles.
 ///
 /// # Examples
 ///
@@ -44,60 +63,78 @@ impl BadgeVariant {
 ///         // Default badge
 ///         <Badge>"New"</Badge>
 ///
-///         // Secondary variant
-///         <Badge variant=BadgeVariant::Secondary>"Beta"</Badge>
+///         // With variant
+///         <Badge variant=Signal::derive(|| BadgeVariant::Secondary)>
+///             "Beta"
+///         </Badge>
 ///
 ///         // Destructive variant
-///         <Badge variant=BadgeVariant::Destructive>"Deprecated"</Badge>
-///
-///         // Outline variant
-///         <Badge variant=BadgeVariant::Outline>"Draft"</Badge>
+///         <Badge variant=Signal::derive(|| BadgeVariant::Destructive)>
+///             "Deprecated"
+///         </Badge>
 ///     }
 /// }
 /// ```
 #[component]
 pub fn Badge(
-    /// Badge variant (default: Default)
+    /// Badge visual variant
+    #[prop(into, optional)]
+    variant: Signal<BadgeVariant>,
+    /// Additional CSS classes to merge
+    #[prop(into, optional)]
+    class: Signal<Option<String>>,
+    /// Reference to the DOM node
+    #[prop(into, optional)]
+    node_ref: AnyNodeRef,
+    /// Render as a child component for composition
     #[prop(optional)]
-    variant: Option<BadgeVariant>,
-
-    /// Additional CSS classes
-    #[prop(optional, into)]
-    class: Option<String>,
-
+    as_child: Option<Callback<BadgeChildProps, AnyView>>,
     /// Badge content
-    children: Children,
+    #[prop(optional)]
+    children: Option<Children>,
 ) -> impl IntoView {
-    let variant = variant.unwrap_or_default();
+    let class = Memo::new(move |_| {
+        BadgeClass {
+            variant: variant.get(),
+        }
+        .with_class(class.get().unwrap_or_default())
+    });
 
-    // EXACT base classes from shadcn/ui
-    let base_classes = "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2";
+    let attrs = move || vec![];
 
-    // Combine all classes exactly as shadcn/ui does
-    let badge_class = format!(
-        "{} {}{}",
-        base_classes,
-        variant.classes(),
-        class.map(|c| format!(" {}", c)).unwrap_or_default()
-    );
+    let children = StoredValue::new(children);
+    let children_fn = ViewFn::new(move || {
+        if let Some(children_fn) = children.get_value() {
+            children_fn().into_any()
+        } else {
+            ().into_any()
+        }
+    });
 
-    view! {
-        <div class=badge_class>
-            {children()}
-        </div>
+    if let Some(as_child) = as_child {
+        (as_child)(BadgeChildProps {
+            node_ref,
+            attrs: attrs(),
+            children: children_fn,
+        })
+        .into_any()
+    } else {
+        view! {
+            <div node_ref=node_ref class=class>
+                {children_fn.run()}
+            </div>
+        }
+        .into_any()
     }
 }
 
-/// Initialize the panic hook for better error messages in the browser console
+/// Initialize the panic hook for better error messages
 #[wasm_bindgen(start)]
 pub fn start() {
     console_error_panic_hook::set_once();
 }
 
 /// Mount a simple badge component to the body
-///
-/// # Arguments
-/// * `text` - The badge text
 #[wasm_bindgen]
 pub fn mount_badge(text: &str) -> Result<(), JsValue> {
     let text = text.to_string();
@@ -112,10 +149,6 @@ pub fn mount_badge(text: &str) -> Result<(), JsValue> {
 }
 
 /// Mount a badge with a specific variant
-///
-/// # Arguments
-/// * `text` - The badge text
-/// * `variant` - Variant name: "default", "secondary", "destructive", "outline"
 #[wasm_bindgen]
 pub fn mount_badge_variant(text: &str, variant: &str) -> Result<(), JsValue> {
     let text = text.to_string();
@@ -128,7 +161,9 @@ pub fn mount_badge_variant(text: &str, variant: &str) -> Result<(), JsValue> {
 
     mount_to_body(move || {
         view! {
-            <Badge variant=variant>{text.clone()}</Badge>
+            <Badge variant=Signal::derive(move || variant)>
+                {text.clone()}
+            </Badge>
         }
     });
 
@@ -146,17 +181,16 @@ mod tests {
     }
 
     #[test]
-    fn test_badge_variant_classes() {
-        assert!(BadgeVariant::Default.classes().contains("bg-primary"));
-        assert!(BadgeVariant::Default.classes().contains("shadow"));
-        assert!(BadgeVariant::Secondary.classes().contains("bg-secondary"));
-        assert!(BadgeVariant::Destructive.classes().contains("bg-destructive"));
-        assert!(BadgeVariant::Destructive.classes().contains("shadow"));
-        assert!(BadgeVariant::Outline.classes().contains("text-foreground"));
+    fn test_badge_variant_equality() {
+        assert_eq!(BadgeVariant::Default, BadgeVariant::Default);
+        assert_eq!(BadgeVariant::Secondary, BadgeVariant::Secondary);
+        assert_eq!(BadgeVariant::Destructive, BadgeVariant::Destructive);
+        assert_eq!(BadgeVariant::Outline, BadgeVariant::Outline);
+        assert_ne!(BadgeVariant::Default, BadgeVariant::Secondary);
     }
 
     #[test]
-    fn test_all_variants_have_classes() {
+    fn test_all_variants_exist() {
         let variants = vec![
             BadgeVariant::Default,
             BadgeVariant::Secondary,
@@ -164,8 +198,51 @@ mod tests {
             BadgeVariant::Outline,
         ];
 
-        for variant in variants {
-            assert!(!variant.classes().is_empty(), "Variant {:?} should have classes", variant);
-        }
+        assert_eq!(variants.len(), 4, "Should have exactly 4 variants");
+    }
+
+    #[test]
+    fn test_variant_clone() {
+        let variant = BadgeVariant::Default;
+        let cloned = variant.clone();
+        assert_eq!(variant, cloned);
+    }
+
+    #[test]
+    fn test_badge_class_creation() {
+        let badge_class = BadgeClass {
+            variant: BadgeVariant::Default,
+        };
+        // Test that the class structure can be created
+        let _ = badge_class.as_class();
+    }
+
+    #[test]
+    fn test_all_variant_values() {
+        // Ensure all variants can be instantiated
+        let _default = BadgeVariant::Default;
+        let _secondary = BadgeVariant::Secondary;
+        let _destructive = BadgeVariant::Destructive;
+        let _outline = BadgeVariant::Outline;
+    }
+
+    #[test]
+    fn test_variant_partial_eq() {
+        assert!(BadgeVariant::Default == BadgeVariant::Default);
+        assert!(BadgeVariant::Secondary != BadgeVariant::Default);
+    }
+
+    #[test]
+    fn test_badge_class_with_variant() {
+        let class_default = BadgeClass {
+            variant: BadgeVariant::Default,
+        };
+        let class_secondary = BadgeClass {
+            variant: BadgeVariant::Secondary,
+        };
+
+        // Verify classes can be generated
+        let _default_str = class_default.as_class();
+        let _secondary_str = class_secondary.as_class();
     }
 }

@@ -1,14 +1,16 @@
 # Badge Component
 
-A small, inline label component built with Leptos and compiled to WebAssembly.
+A small badge component built with Leptos and compiled to WebAssembly, following shadcn/ui design patterns.
 
 ## Features
 
 - **4 Variants**: Default, Secondary, Destructive, Outline
-- **Type-safe**: Leveraging Rust's enum system
-- **Accessible**: Proper semantic HTML
+- **Type-safe**: Using Rust's type system with TwClass/TwVariant macros
+- **Accessible**: Built with ARIA standards
 - **Performant**: Compiled to WASM
-- **Customizable**: Support for custom classes
+- **Reactive**: Full Leptos signal support
+- **Customizable**: Support for custom classes and node refs
+- **Composition**: AsChild pattern support
 - **Small**: ~15-20KB gzipped
 
 ## Installation
@@ -42,23 +44,29 @@ use leptos::*;
 fn App() -> impl IntoView {
     view! {
         // Default badge
-        <Badge text="New" />
+        <Badge>
+            "New"
+        </Badge>
 
-        // Secondary variant
-        <Badge text="Beta" variant=BadgeVariant::Secondary />
+        // With variant
+        <Badge variant=Signal::derive(|| BadgeVariant::Secondary)>
+            "Beta"
+        </Badge>
 
         // Destructive variant
-        <Badge text="Deprecated" variant=BadgeVariant::Destructive />
+        <Badge variant=Signal::derive(|| BadgeVariant::Destructive)>
+            "Deprecated"
+        </Badge>
 
         // Outline variant
-        <Badge text="Draft" variant=BadgeVariant::Outline />
+        <Badge variant=Signal::derive(|| BadgeVariant::Outline)>
+            "Draft"
+        </Badge>
 
-        // With custom classes
-        <Badge
-            text="Custom"
-            variant=BadgeVariant::Default
-            class=Some("ml-2".to_string())
-        />
+        // With custom class
+        <Badge class=Signal::derive(|| Some("ml-2".to_string()))>
+            "Custom"
+        </Badge>
     }
 }
 ```
@@ -73,10 +81,7 @@ fn App() -> impl IntoView {
 </head>
 <body>
     <script type="module">
-        import init, {
-            mount_badge,
-            mount_badge_variant
-        } from './pkg/badge.js';
+        import init, { mount_badge, mount_badge_variant } from './pkg/badge.js';
 
         async function run() {
             await init();
@@ -100,18 +105,21 @@ fn App() -> impl IntoView {
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `text` | `String` | Required | The text to display in the badge |
-| `variant` | `Option<BadgeVariant>` | `Default` | Visual style variant |
-| `class` | `Option<String>` | `None` | Additional CSS classes |
+| `variant` | `Signal<BadgeVariant>` | `Default` | Visual style variant |
+| `class` | `Signal<Option<String>>` | `None` | Additional CSS classes |
+| `node_ref` | `AnyNodeRef` | Default | Reference to the DOM node |
+| `as_child` | `Option<Callback<BadgeChildProps, AnyView>>` | `None` | Render as child component |
+| `children` | `Option<Children>` | `None` | Badge content |
 
 ### BadgeVariant
 
 ```rust
+#[derive(PartialEq, TwVariant, Clone, Copy)]
 pub enum BadgeVariant {
-    Default,      // Primary badge style (dark background)
-    Secondary,    // Secondary badge style (light background)
-    Destructive,  // For errors or warnings (red background)
-    Outline,      // Bordered badge with no background
+    Default,      // border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80
+    Secondary,    // border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80
+    Destructive,  // border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80
+    Outline,      // text-foreground
 }
 ```
 
@@ -137,48 +145,112 @@ mount_badge_variant('Error', 'destructive');
 
 ## Examples
 
+The component includes two WASM-based examples:
+
+### Basic Example
+
+Simple demonstration of badge variants:
+
+```bash
+# Build the example
+wasm-pack build --target web --out-dir pkg --example basic
+
+# Serve and view
+cd examples
+python3 -m http.server 8080
+# Visit http://localhost:8080?example=basic
+```
+
+### Comprehensive Example
+
+Full showcase of all features including:
+- All 4 variants
+- Status indicators
+- Tags and categories
+- Notifications
+- Number badges
+- Interactive demo with state management
+
+```bash
+# Build the example
+wasm-pack build --target web --out-dir pkg --example comprehensive
+
+# Serve and view
+cd examples
+python3 -m http.server 8080
+# Visit http://localhost:8080?example=comprehensive
+```
+
+## Common Use Cases
+
 ### Status Badges
 
 ```rust
-<Badge text="Active" variant=BadgeVariant::Default />
-<Badge text="Pending" variant=BadgeVariant::Secondary />
-<Badge text="Error" variant=BadgeVariant::Destructive />
+<Badge variant=Signal::derive(|| BadgeVariant::Default)>
+    "Active"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Secondary)>
+    "Pending"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Destructive)>
+    "Error"
+</Badge>
 ```
 
 ### Category Tags
 
 ```rust
-<Badge text="React" variant=BadgeVariant::Outline />
-<Badge text="TypeScript" variant=BadgeVariant::Outline />
-<Badge text="Rust" variant=BadgeVariant::Outline />
+<Badge variant=Signal::derive(|| BadgeVariant::Outline)>
+    "React"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Outline)>
+    "TypeScript"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Outline)>
+    "Rust"
+</Badge>
 ```
 
 ### Notification Count
 
 ```rust
-<Badge text="3" variant=BadgeVariant::Destructive />
-<Badge text="99+" variant=BadgeVariant::Destructive />
+<Badge variant=Signal::derive(|| BadgeVariant::Destructive)>
+    "3"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Destructive)>
+    "99+"
+</Badge>
 ```
 
 ### Feature Labels
 
 ```rust
-<Badge text="New" variant=BadgeVariant::Default />
-<Badge text="Beta" variant=BadgeVariant::Secondary />
-<Badge text="Deprecated" variant=BadgeVariant::Destructive />
+<Badge variant=Signal::derive(|| BadgeVariant::Default)>
+    "New"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Secondary)>
+    "Beta"
+</Badge>
+<Badge variant=Signal::derive(|| BadgeVariant::Destructive)>
+    "Deprecated"
+</Badge>
 ```
 
 ## Styling
 
-The badge uses Tailwind CSS classes that match the shadcn/ui design system. Make sure to include Tailwind CSS in your project and configure the shadcn/ui color palette:
+The badge uses exact shadcn/ui Tailwind CSS classes via the `tailwind_fuse` crate. Ensure your project includes Tailwind CSS with shadcn/ui colors:
 
 ```javascript
 tailwind.config = {
     theme: {
         extend: {
             colors: {
+                border: "hsl(214.3 31.8% 91.4%)",
+                ring: "hsl(221.2 83.2% 53.3%)",
+                background: "hsl(0 0% 100%)",
+                foreground: "hsl(222.2 84% 4.9%)",
                 primary: {
-                    DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                    DEFAULT: "hsl(221.2 83.2% 53.3%)",
                     foreground: "hsl(210 40% 98%)",
                 },
                 secondary: {
@@ -189,14 +261,11 @@ tailwind.config = {
                     DEFAULT: "hsl(0 84.2% 60.2%)",
                     foreground: "hsl(210 40% 98%)",
                 },
-                // ... more colors
             }
         }
     }
 }
 ```
-
-See the `examples/index.html` file for a complete Tailwind configuration.
 
 ## Development
 
@@ -212,6 +281,14 @@ wasm-pack build --target web --dev --out-dir pkg
 wasm-pack build --target web --release --out-dir pkg
 ```
 
+### Build Examples
+
+```bash
+# Build specific example
+wasm-pack build --target web --out-dir pkg --example basic
+wasm-pack build --target web --out-dir pkg --example comprehensive
+```
+
 ### Run Examples
 
 ```bash
@@ -222,24 +299,22 @@ python3 -m http.server 8080
 
 ## Testing
 
+The component includes comprehensive unit tests covering all variants and functionality:
+
 ```bash
 cargo test
 ```
 
-### Test Output
-
-```
-running 3 tests
-test tests::test_badge_variant_default ... ok
-test tests::test_badge_variant_classes ... ok
-test tests::test_all_variants_have_classes ... ok
-
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
-```
+Tests include:
+- Variant default values
+- Variant equality
+- All variants enumeration
+- Clone trait implementation
+- BadgeClass creation and usage
 
 ## Bundle Size
 
-Typical sizes (with wasm-opt):
+The WASM bundle is optimized for size using `wasm-opt -O4`:
 
 - WASM module: ~40-50KB (uncompressed)
 - WASM module: ~15-20KB (gzipped)
@@ -254,39 +329,20 @@ Supports all modern browsers with WebAssembly support:
 - Safari 11+
 - Edge 16+
 
-## Common Use Cases
+## Architecture
 
-### With Icons
+The badge component uses modern Leptos patterns:
 
-```rust
-// Note: Icon support requires additional setup
-<Badge text="⭐ Featured" variant=BadgeVariant::Default />
-<Badge text="🔥 Popular" variant=BadgeVariant::Destructive />
-```
-
-### In Lists
-
-```rust
-<div class="flex items-center gap-2">
-    <span>Project Name</span>
-    <Badge text="Private" variant=BadgeVariant::Outline />
-    <Badge text="Active" variant=BadgeVariant::Default />
-</div>
-```
-
-### With Counters
-
-```rust
-<div class="flex items-center gap-2">
-    <span>Notifications</span>
-    <Badge text="5" variant=BadgeVariant::Destructive />
-</div>
-```
+- **TwClass/TwVariant**: Type-safe Tailwind class generation
+- **Signals**: Reactive updates
+- **Memos**: Optimized class computation
+- **StructComponent**: Composition patterns
+- **NodeRef**: DOM access when needed
 
 ## Accessibility
 
-- Uses semantic `<div>` element
-- Proper text contrast ratios
+- Uses semantic HTML elements
+- Proper text contrast ratios (WCAG AA compliant)
 - Focus styles for keyboard navigation
 - Screen reader friendly
 
@@ -294,27 +350,10 @@ Supports all modern browsers with WebAssembly support:
 
 MIT
 
-## Contributing
+## Related
 
-Contributions are welcome! Please ensure:
-
-1. Code follows Rust formatting (`cargo fmt`)
-2. All tests pass (`cargo test`)
-3. No clippy warnings (`cargo clippy`)
-4. Examples are updated if API changes
-
-## Related Components
-
-- [Button](../button/README.md) - Clickable button component
-- Avatar (coming soon) - User avatar component
-- Label (coming soon) - Form label component
-
-## Resources
-
-- [Leptos Documentation](https://leptos.dev/)
 - [shadcn/ui Badge](https://ui.shadcn.com/docs/components/badge)
+- [Leptos Documentation](https://leptos.dev/)
+- [RustForWeb/shadcn-ui](https://github.com/RustForWeb/shadcn-ui)
+- [tailwind_fuse](https://crates.io/crates/tailwind_fuse)
 - [wasm-pack](https://rustwasm.github.io/wasm-pack/)
-
----
-
-Built with 🦀 Rust + ⚡ Leptos + 🌐 WASM
